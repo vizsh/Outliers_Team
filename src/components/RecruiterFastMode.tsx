@@ -46,7 +46,7 @@ export const RecruiterFastMode: React.FC<RecruiterFastModeProps> = ({
               OUTLIERS: RECRUITER FAST-MODE DIRECTORY
             </h1>
             <div style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
-              DIRECT PORTFOLIO ACCESS // DESTINATION: {TARGET_PORTFOLIO_URL}
+              DIRECT MEMBER PORTFOLIO HUBS // SHREYAS • RISHIT • JEEVESH
             </div>
           </div>
 
@@ -181,13 +181,13 @@ export const RecruiterFastMode: React.FC<RecruiterFastModeProps> = ({
                     GITHUB ↗
                   </a>
                   <a
-                    href={TARGET_PORTFOLIO_URL}
+                    href={player.workspaceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="arcade-btn"
                     style={{ background: '#1e293b', borderColor: '#475569', fontSize: '9px', padding: '6px' }}
                   >
-                    3D DESKTOP ↗
+                    DIRECT SITE ↗
                   </a>
                 </div>
               </div>
@@ -199,10 +199,10 @@ export const RecruiterFastMode: React.FC<RecruiterFastModeProps> = ({
         <section style={{ padding: '20px', borderRadius: '8px', background: 'rgba(15, 23, 42, 0.95)', border: '1.5px solid rgba(0, 240, 255, 0.3)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #1e293b', paddingBottom: '8px' }}>
             <h3 style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px', color: 'var(--neon-cyan)', fontFamily: 'var(--font-mono)' }}>
-              ★ FEATURED COLLABORATIVE HACKATHON REPOSITORIES
+              ★ 5 NATIONAL HACKATHON VICTORIES // VERIFIED TRACK RECORD
             </h3>
             <span style={{ fontSize: '11px', color: 'var(--neon-gold)', fontFamily: 'var(--font-mono)' }}>
-              12 NATIONAL HACKATHON WINS RECORD
+              {TEAM_INFO.hackathonsWon} WINS • {TEAM_INFO.prizeMoney} PRIZE POOL • 2026 SEASON
             </span>
           </div>
 
@@ -226,7 +226,7 @@ export const RecruiterFastMode: React.FC<RecruiterFastModeProps> = ({
 
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <a
-                    href={TARGET_PORTFOLIO_URL}
+                    href={q.liveUrl || TARGET_PORTFOLIO_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="arcade-btn arcade-btn-gold"

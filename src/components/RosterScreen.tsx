@@ -84,19 +84,22 @@ export const RosterScreen: React.FC<RosterScreenProps> = ({
           {TEAM_INFO.name}: {TEAM_INFO.marquee}
         </div>
 
-        {/* Live Team Metrics Ticker */}
+        {/* Live Team Metrics Ticker with Real PDF Stats */}
         <div className="roster-stats-ticker">
           <span style={{ color: '#ffd700' }}>
             🏆 HACKATHONS WON: <strong>{TEAM_INFO.hackathonsWon}</strong>
           </span>
           <span style={{ color: '#10b981' }}>
-            🚀 SYSTEMS SHIPPED: <strong>{TEAM_INFO.systemsShipped}</strong>
-          </span>
-          <span style={{ color: '#ff007f' }}>
-            👾 BUGS SLAIN: <strong>{TEAM_INFO.bugsSlain}</strong>
+            💰 PRIZE WON: <strong>{TEAM_INFO.prizeMoney}</strong>
           </span>
           <span style={{ color: '#38bdf8' }}>
-            ⚡ COMMITS: <strong>{TEAM_INFO.commitsTotal}</strong>
+            🚀 SHIPPED PROJECTS: <strong>{TEAM_INFO.independentProjects}</strong>
+          </span>
+          <span style={{ color: '#f43f5e' }}>
+            📍 CITIES: <strong>{TEAM_INFO.citiesTravelled} (PUNE, GANDHINAGAR, MUMBAI)</strong>
+          </span>
+          <span style={{ color: '#c084fc' }}>
+            🎓 <strong>DJSCE AI & DS</strong>
           </span>
         </div>
       </header>
@@ -106,6 +109,12 @@ export const RosterScreen: React.FC<RosterScreenProps> = ({
         {playerIds.map((id) => {
           const player = PLAYERS[id];
           const isSelected = selectedId === id;
+
+          // Member-specific highlight credential from PDF
+          const highlightBadge = 
+            id === 'shreyas' ? '★ 9.20 CGPA • TOP 8 ICPC 2025' :
+            id === 'rishit' ? '★ 8 HACKATHON WINS • 2 CASE COMPS' :
+            '★ 9.6 CGPA • 5x NATIONAL CHAMPION';
 
           return (
             <div
@@ -139,7 +148,23 @@ export const RosterScreen: React.FC<RosterScreenProps> = ({
                 <div className="player-class-badge">
                   "{player.classTitle}"
                 </div>
-                <div className="player-persona-text">
+                <div 
+                  style={{
+                    fontSize: '10px',
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 'bold',
+                    color: '#ffd700',
+                    background: 'rgba(255, 215, 0, 0.12)',
+                    border: '1px solid rgba(255, 215, 0, 0.4)',
+                    padding: '3px 8px',
+                    borderRadius: '3px',
+                    marginTop: '4px',
+                    textAlign: 'center'
+                  }}
+                >
+                  {highlightBadge}
+                </div>
+                <div className="player-persona-text" style={{ marginTop: '4px' }}>
                   {player.persona}
                 </div>
               </div>
@@ -208,7 +233,7 @@ export const RosterScreen: React.FC<RosterScreenProps> = ({
                   style={{ width: '100%', fontSize: '9px', padding: '8px 12px' }}
                 >
                   <span>⚡</span>
-                  <span>QUICK LAUNCH PORTFOLIO</span>
+                  <span>LAUNCH {player.name.split(' ')[0].toUpperCase()}'S SITE ↗</span>
                 </button>
               </div>
             </div>

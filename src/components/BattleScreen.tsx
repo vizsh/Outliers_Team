@@ -63,12 +63,21 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
   const [superBanner, setSuperBanner] = useState<string | null>(null);
   const [isKoFreeze, setIsKoFreeze] = useState<boolean>(false);
 
-  // Active Hit Sparks and Projectiles
+  // Active Hit Sparks, Projectiles, Slash and Shockwave FX
   const [hitSparks, setHitSparks] = useState<HitSpark[]>([]);
   const [projectiles, setProjectiles] = useState<ActiveProjectile[]>([]);
   const [activeSlash, setActiveSlash] = useState<{ x: number; y: number; color: string } | null>(null);
   const [activeShockwave, setActiveShockwave] = useState<{ x: number; color: string } | null>(null);
+  
+  // Dynamic Tactical Telegraphs & Clashes
+  const [incomingWarning, setIncomingWarning] = useState<string | null>(null);
+  const [opponentTelegraph, setOpponentTelegraph] = useState<string | null>(null);
+  const [isClashActive, setIsClashActive] = useState<boolean>(false);
+  const [isOpponentChargingSuper, setIsOpponentChargingSuper] = useState<boolean>(false);
+
   const nextId = useRef<number>(1);
+  const lastPlayerAttackTime = useRef<number>(0);
+  const isEnraged = opponentHp < 40 && opponentHp > 0;
 
   // Trigger screen shake
   const triggerScreenShake = useCallback((durationMs: number = 250) => {
@@ -110,18 +119,27 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
   // ==========================================
   const handleLightAttack = useCallback(() => {
     if (p1Action !== 'idle' || opponentHp <= 0 || isKoFreeze) return;
+    lastPlayerAttackTime.current = Date.now();
     sound.playWhoosh();
     setP1Action('light_attack');
     setP1Lunge(240); // Dash into close combat range
 
     setTimeout(() => {
+      // Check if Opponent is charging super -> Interrupt it!
+      if (isOpponentChargingSuper) {
+        setIsOpponentChargingSuper(false);
+        sound.playImpact();
+        addHitSpark(65, 45, 'SUPER INTERRUPTED!', '#ffd700');
+        setCombatText(`⚡ INTERRUPT! ${challenger.name} BROKE ${opponent.name}'S SUPER WIND-UP!`);
+      }
+
       // Check if P2 is defending
       if (p2ShowShield) {
         sound.playParryClang();
         setP2IsParrying(true);
         addHitSpark(62, 55, 'DEFLECTED! -3 HP', '#ffd700');
         setOpponentHp((hp) => Math.max(1, hp - 3));
-        setCombatText(`${opponent.name} BLOCKED YOUR JAB!`);
+        setCombatText(`${opponent.name} DEFLECTED YOUR JAB!`);
         setTimeout(() => setP2IsParrying(false), 300);
       } else {
         sound.playSwordDraw();
@@ -149,13 +167,14 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
         setP2Lunge(0);
       }, 240);
     }, 160);
-  }, [p1Action, opponentHp, isKoFreeze, p2ShowShield, challenger.name, opponent.name, triggerScreenShake, addHitSpark, checkVictory]);
+  }, [p1Action, opponentHp, isKoFreeze, isOpponentChargingSuper, p2ShowShield, challenger.name, opponent.name, triggerScreenShake, addHitSpark, checkVictory]);
 
   // ==========================================
   // ACTION 2: HEAVY SMASH (Jumping power slam)
   // ==========================================
   const handleHeavyAttack = useCallback(() => {
     if (p1Action !== 'idle' || opponentHp <= 0 || isKoFreeze) return;
+    lastPlayerAttackTime.current = Date.now();
     sound.playMechHydraulic();
     setP1Action('heavy_attack');
     setP1Lunge(180);
@@ -169,13 +188,19 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
       sound.playImpact();
       triggerScreenShake(450);
 
+      // Breaks super charge immediately
+      if (isOpponentChargingSuper) {
+        setIsOpponentChargingSuper(false);
+        addHitSpark(68, 45, 'CRITICAL INTERRUPT!', '#ff007f');
+      }
+
       if (p2ShowShield) {
         sound.playParryClang();
         setP2IsParrying(true);
-        addHitSpark(65, 55, 'GUARD BROKEN! -12 HP', '#ffd700');
-        setOpponentHp((hp) => Math.max(1, hp - 12));
+        addHitSpark(65, 55, 'GUARD BROKEN! -16 HP', '#ffd700');
+        setOpponentHp((hp) => Math.max(1, hp - 16));
         setP2ShowShield(false);
-        setCombatText(`SHIELD CRACKED BY HEAVY SMASH! (-12 HP)`);
+        setCombatText(`SHIELD CRACKED BY HEAVY SMASH! (-16 HP)`);
         setTimeout(() => setP2IsParrying(false), 300);
       } else {
         setP2Action('hurt');
@@ -203,7 +228,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
         setP2Jump(0);
       }, 340);
     }, 240);
-  }, [p1Action, opponentHp, isKoFreeze, p2ShowShield, challenger.name, triggerScreenShake, addHitSpark, checkVictory]);
+  }, [p1Action, opponentHp, isKoFreeze, isOpponentChargingSuper, p2ShowShield, challenger.name, triggerScreenShake, addHitSpark, checkVictory]);
 
   // ==========================================
   // ACTION 3: CYBER SHIELD / PARRY
@@ -215,11 +240,11 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
     setP1Action('defend');
     setCombatText(`🛡️ ${challenger.name} RAISES CI/CD CYBER FORCEFIELD! (-90% DAMAGE)`);
 
-    // Shield stays active for 2.2 seconds
+    // Shield stays active for 2.0 seconds
     setTimeout(() => {
       setP1ShowShield(false);
       setP1Action('idle');
-    }, 2200);
+    }, 2000);
   }, [p1Action, isKoFreeze, challenger.name]);
 
   // ==========================================
@@ -227,6 +252,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
   // ==========================================
   const handleComboRush = useCallback(() => {
     if (p1Action !== 'idle' || opponentHp <= 0 || isKoFreeze) return;
+    lastPlayerAttackTime.current = Date.now();
     setP1Action('light_attack');
     setP1Lunge(200);
     sound.playWhoosh();
@@ -291,6 +317,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
   // ==========================================
   const handleProjectile = useCallback(() => {
     if (p1Action !== 'idle' || opponentHp <= 0 || isKoFreeze) return;
+    lastPlayerAttackTime.current = Date.now();
     sound.playWhoosh();
     setP1Action('projectile');
 
@@ -349,6 +376,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
   // ==========================================
   const handleSuperMove = useCallback(() => {
     if (superMeter < 50 || p1Action !== 'idle' || opponentHp <= 0 || isKoFreeze) return;
+    lastPlayerAttackTime.current = Date.now();
     setSuperMeter(0);
     sound.playSuperAlarm();
     setSuperBanner(`★★ ULTIMATE SPECIAL: ${challenger.attackName}! ★★`);
@@ -393,41 +421,119 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
   }, [superMeter, p1Action, opponentHp, isKoFreeze, challenger.attackName, triggerScreenShake, addHitSpark, checkVictory]);
 
   // ==========================================
-  // OPPONENT DYNAMIC AI COMBAT ENGINE
+  // ACTIVE DYNAMIC OPPONENT COMBAT AI ENGINE
   // ==========================================
   useEffect(() => {
-    if (isKoFreeze) return;
+    if (isKoFreeze || opponentHp <= 0) return;
 
-    const aiInterval = setInterval(() => {
-      if (opponentHp <= 0 || p1Action === 'super' || p2Action !== 'idle') return;
+    // Faster AI tempo: attacks every 1.8s - 2.4s (or 1.3s if enraged)
+    const baseInterval = isEnraged ? 1400 : 2100;
 
-      // Pick an intelligent tactical AI move (1 = Light, 2 = Heavy, 3 = Shield, 4 = Projectile)
+    const aiTimer = setInterval(() => {
+      if (opponentHp <= 0 || p1Action === 'super' || p2Action !== 'idle' || isKoFreeze) return;
+
       const roll = Math.random();
 
-      if (roll < 0.25) {
-        // AI raises shield
+      // If enraged and roll < 0.35, charge opponent super move!
+      if (isEnraged && roll < 0.35 && !isOpponentChargingSuper) {
+        setIsOpponentChargingSuper(true);
+        sound.playSuperAlarm();
+        setOpponentTelegraph('🚨 ULTIMATE WIND-UP!');
+        setIncomingWarning(`⚠️ BREAK ${opponent.name.toUpperCase()}'S GUARD WITH [2] HEAVY SMASH OR [3] PARRY!`);
+        setCombatText(`🚨 WARNING! ${opponent.name} CHARGING ULTIMATE ${opponent.attackName}!`);
+
+        setTimeout(() => {
+          setOpponentTelegraph(null);
+          setIncomingWarning(null);
+
+          // If still charging (not interrupted by player attack)
+          setIsOpponentChargingSuper((stillCharging) => {
+            if (stillCharging) {
+              sound.playImpact();
+              triggerScreenShake(550);
+              setP2Action('super');
+              setP2Lunge(300);
+
+              setTimeout(() => {
+                const isShielded = p1ShowShield;
+                if (isShielded) {
+                  sound.playParryClang();
+                  setP1IsParrying(true);
+                  addHitSpark(38, 50, 'SUPER BLOCKED! -8 HP', '#ffd700');
+                  setChallengerHp((hp) => Math.max(8, hp - 8));
+                  setCombatText(`⚡ MASTER PARRY! DEFLECTED ${opponent.name}'S ULTIMATE!`);
+                  setTimeout(() => setP1IsParrying(false), 350);
+                } else {
+                  sound.playImpact();
+                  triggerScreenShake(400);
+                  setP1Action('hurt');
+                  setP1Lunge(-100);
+                  setP1Jump(40);
+                  const dmg = 38;
+                  setChallengerHp((hp) => Math.max(5, hp - dmg));
+                  addHitSpark(35, 45, `💥 -${dmg} ENEMY SUPER!`, '#f43f5e');
+                  setCombatText(`💥 CRITICAL! ${opponent.name} HIT WITH ${opponent.attackName} (-${dmg} HP)!`);
+
+                  setTimeout(() => {
+                    setP1Action('idle');
+                    setP1Lunge(0);
+                    setP1Jump(0);
+                  }, 350);
+                }
+
+                setTimeout(() => {
+                  setP2Action('idle');
+                  setP2Lunge(0);
+                }, 300);
+              }, 260);
+              return false;
+            }
+            return false;
+          });
+        }, 1100);
+        return;
+      }
+
+      // Tactical decision:
+      if (roll < 0.22) {
+        // AI raises defensive shield
         setP2ShowShield(true);
         setP2Action('defend');
-        setCombatText(`${opponent.name} ENTERS DEFENSIVE STANCE!`);
+        setOpponentTelegraph('🛡️ GUARD UP');
+        setCombatText(`${opponent.name} RAISES CI/CD SHIELD! (-90% DAMAGE)`);
+
         setTimeout(() => {
           setP2ShowShield(false);
           setP2Action('idle');
+          setOpponentTelegraph(null);
         }, 1600);
-      } else if (roll < 0.55) {
-        // AI Light Jab
+
+      } else if (roll < 0.52) {
+        // AI Fast Dash Jab
         sound.playWhoosh();
+        setOpponentTelegraph('⚡ DASH JAB');
+        setIncomingWarning(`⚠️ INCOMING ATTACK! [PRESS 3 TO PARRY]`);
         setP2Action('light_attack');
-        setP2Lunge(220);
+        setP2Lunge(240);
 
         setTimeout(() => {
+          setIncomingWarning(null);
+          setOpponentTelegraph(null);
+
           if (p1ShowShield) {
             sound.playParryClang();
             setP1IsParrying(true);
-            addHitSpark(35, 55, 'BLOCKED! ONLY -2 HP', '#ffd700');
+            addHitSpark(38, 55, '⚡ PERFECT PARRY! -2 HP', '#ffd700');
             setChallengerHp((hp) => Math.max(5, hp - 2));
             setSuperMeter((sm) => Math.min(100, sm + 25));
             setCombatText(`⚡ PARRY SUCCESSFUL! GAINED +25% SUPER!`);
-            setTimeout(() => setP1IsParrying(false), 300);
+            setP2Action('hurt');
+            setP2Lunge(-40);
+            setTimeout(() => {
+              setP1IsParrying(false);
+              setP2Action('idle');
+              setP2Lunge(0);
+            }, 300);
           } else {
             sound.playImpact();
             triggerScreenShake(200);
@@ -436,68 +542,89 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
 
             const dmg = 15;
             setChallengerHp((hp) => Math.max(5, hp - dmg));
-            addHitSpark(32, 50, `-${dmg} ENEMY HIT!`, '#f43f5e');
+            addHitSpark(34, 50, `-${dmg} ENEMY JAB!`, '#f43f5e');
             setCombatText(`${opponent.name} COUNTER-STRIKES FOR -${dmg} HP!`);
 
             setTimeout(() => {
               setP1Action('idle');
               setP1Lunge(0);
             }, 250);
-          }
 
-          setP2Action('idle');
-          setP2Lunge(0);
-        }, 180);
-      } else if (roll < 0.8) {
-        // AI Heavy Smash
+            setTimeout(() => {
+              setP2Action('idle');
+              setP2Lunge(0);
+            }, 220);
+          }
+        }, 200);
+
+      } else if (roll < 0.78) {
+        // AI Leaping Heavy Smash
         sound.playMechHydraulic();
+        setOpponentTelegraph('💥 HEAVY SMASH');
+        setIncomingWarning(`🚨 LEAPING SMASH INCOMING! [PRESS 3 TO BLOCK]`);
         setP2Action('heavy_attack');
         setP2Lunge(280);
-        setP2Jump(70);
+        setP2Jump(80);
 
         setTimeout(() => {
           setP2Jump(0);
-          sound.playImpact();
+          setIncomingWarning(null);
+          setOpponentTelegraph(null);
 
           if (p1ShowShield) {
             sound.playParryClang();
             setP1IsParrying(true);
-            addHitSpark(35, 55, 'DEFLECTED! -6 HP', '#ffd700');
-            setChallengerHp((hp) => Math.max(5, hp - 6));
+            addHitSpark(38, 55, 'DEFLECTED! -5 HP', '#ffd700');
+            setChallengerHp((hp) => Math.max(5, hp - 5));
             setCombatText(`HEAVY SMASH DEFLECTED BY SHIELD!`);
             setTimeout(() => setP1IsParrying(false), 300);
           } else {
-            triggerScreenShake(380);
+            sound.playImpact();
+            triggerScreenShake(400);
             setP1Action('hurt');
             setP1Lunge(-90);
+            setP1Jump(25);
             const dmg = 28;
             setChallengerHp((hp) => Math.max(5, hp - dmg));
             addHitSpark(30, 45, `💥 -${dmg} CRITICAL SMASH!`, '#f43f5e');
+            setActiveSlash({ x: 35, y: 48, color: '#f43f5e' });
+            setActiveShockwave({ x: 35, color: '#f43f5e' });
+            setTimeout(() => { setActiveSlash(null); setActiveShockwave(null); }, 380);
             setCombatText(`⚠️ WARNING! ${opponent.name} LANDS HEAVY CRUSH (-${dmg} HP)!`);
 
             setTimeout(() => {
               setP1Action('idle');
               setP1Lunge(0);
+              setP1Jump(0);
             }, 300);
           }
 
-          setP2Action('idle');
-          setP2Lunge(0);
-        }, 250);
+          setTimeout(() => {
+            setP2Action('idle');
+            setP2Lunge(0);
+          }, 260);
+        }, 280);
+
       } else {
-        // AI Projectile
+        // AI Ranged Projectile
         sound.playWhoosh();
+        setOpponentTelegraph('🎯 TECH PROJECTILE');
         setP2Action('projectile');
+
+        const projType: 'katana' | 'kunai' | 'plasma' = 
+          opponentId === 'shreyas' ? 'katana' : opponentId === 'rishit' ? 'kunai' : 'plasma';
+
         const pId = ++nextId.current;
-        setProjectiles((prev) => [...prev, { id: pId, fromP1: false, type: 'kunai', x: 72 }]);
+        setProjectiles((prev) => [...prev, { id: pId, fromP1: false, type: projType, x: 72 }]);
 
         setTimeout(() => {
           setProjectiles((prev) => prev.filter((p) => p.id !== pId));
+          setOpponentTelegraph(null);
 
           if (p1ShowShield) {
             sound.playParryClang();
             setP1IsParrying(true);
-            addHitSpark(35, 55, 'DEFLECTED! -3 HP', '#ffd700');
+            addHitSpark(38, 55, 'DEFLECTED! -3 HP', '#ffd700');
             setChallengerHp((hp) => Math.max(5, hp - 3));
             setTimeout(() => setP1IsParrying(false), 300);
           } else {
@@ -505,9 +632,10 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
             triggerScreenShake(220);
             setP1Action('hurt');
             setP1Lunge(-40);
-            const dmg = 18;
+            const dmg = 20;
             setChallengerHp((hp) => Math.max(5, hp - dmg));
-            addHitSpark(32, 50, `⚡ -${dmg} ENERGY BLAST!`, '#f43f5e');
+            addHitSpark(34, 50, `⚡ -${dmg} ENERGY BLAST!`, '#f43f5e');
+            setCombatText(`${opponent.name} FIRED ${projType.toUpperCase()} BEAM (-${dmg} HP)!`);
 
             setTimeout(() => {
               setP1Action('idle');
@@ -518,10 +646,10 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
           setP2Action('idle');
         }, 380);
       }
-    }, 3200);
+    }, baseInterval);
 
-    return () => clearInterval(aiInterval);
-  }, [opponentHp, p1Action, p2Action, p1ShowShield, opponent.name, isKoFreeze, triggerScreenShake, addHitSpark]);
+    return () => clearInterval(aiTimer);
+  }, [opponentHp, p1Action, p2Action, p1ShowShield, opponent.name, opponent.attackName, opponentId, isEnraged, isKoFreeze, isOpponentChargingSuper, triggerScreenShake, addHitSpark]);
 
   // Round timer
   useEffect(() => {
@@ -600,6 +728,32 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
           >
             {superBanner}
           </div>
+        </div>
+      )}
+
+      {/* Dynamic Mid-Battle Incoming Warning Pill Banner */}
+      {incomingWarning && (
+        <div 
+          style={{
+            position: 'absolute',
+            top: '110px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(239, 68, 68, 0.95)',
+            border: '2px solid #ffffff',
+            borderRadius: '20px',
+            padding: '6px 18px',
+            zIndex: 90,
+            fontFamily: 'var(--font-pixel)',
+            fontSize: '12px',
+            color: '#ffffff',
+            boxShadow: '0 0 25px rgba(239, 68, 68, 0.9)',
+            letterSpacing: '1px',
+            animation: 'sparkPop 0.2s ease-out',
+            pointerEvents: 'none'
+          }}
+        >
+          {incomingWarning}
         </div>
       )}
 
@@ -725,6 +879,11 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
       <header className="battle-header-box" style={{ position: 'relative', zIndex: 20 }}>
         <div className="stage-badge">
           STAGE 01: PORTFOLIO DUEL • {challenger.name.toUpperCase()} VS {opponent.name.toUpperCase()}
+          {isEnraged && (
+            <span style={{ color: '#ef4444', marginLeft: '10px', animation: 'superAuraPulse 0.4s infinite alternate' }}>
+              ⚠️ [OPPONENT OVERCLOCKED]
+            </span>
+          )}
         </div>
 
         <div className="battle-hud-row">
@@ -760,7 +919,13 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
               <span style={{ color: 'var(--neon-magenta)', fontWeight: 'bold' }}>[P2] {opponent.name}</span>
             </div>
             <div className="fighter-hp-bar fighter-hp-bar-p2">
-              <div className="fighter-hp-fill fighter-hp-fill-p2" style={{ width: `${opponentHp}%` }} />
+              <div 
+                className="fighter-hp-fill fighter-hp-fill-p2" 
+                style={{ 
+                  width: `${opponentHp}%`,
+                  background: isEnraged ? 'linear-gradient(270deg, #ef4444 0%, #ff007f 100%)' : undefined 
+                }} 
+              />
             </div>
             <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: '#94a3b8', marginTop: '3px' }}>
               CLASS: {opponent.classTitle}
@@ -832,7 +997,30 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({
         </div>
 
         {/* P2: Opponent Fighter Standing on Right (Facing Left) */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+          {/* Opponent Overhead Telegraph Warning Badge */}
+          {opponentTelegraph && (
+            <div 
+              style={{
+                position: 'absolute',
+                top: '-35px',
+                background: 'rgba(239, 68, 68, 0.9)',
+                border: '1.5px solid #ffffff',
+                borderRadius: '4px',
+                padding: '3px 8px',
+                fontSize: '10px',
+                fontFamily: 'var(--font-pixel)',
+                color: '#ffffff',
+                boxShadow: '0 0 15px rgba(239, 68, 68, 0.8)',
+                whiteSpace: 'nowrap',
+                animation: 'shieldPulse 0.2s infinite alternate',
+                zIndex: 45
+              }}
+            >
+              {opponentTelegraph}
+            </div>
+          )}
+
           <FighterSprite 
             id={opponentId} 
             action={p2Action} 

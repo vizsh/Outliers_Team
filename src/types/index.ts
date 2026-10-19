@@ -32,7 +32,7 @@ export interface QuestNode {
   id: string;
   title: string;
   subtitle: string;
-  category: 'Health-Tech' | 'Computer Vision' | 'Defense & Border Security' | 'FinTech & Quant' | 'Rapid Engineering';
+  category: string;
   event: string;
   award: string;
   year: string;

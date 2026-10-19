@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TARGET_PORTFOLIO_URL, PLAYERS } from '../data/teamData';
+import { PLAYERS } from '../data/teamData';
 import type { PlayerId } from '../types';
 import { sound } from '../services/soundEngine';
 
@@ -14,36 +14,66 @@ export const LivePortfolioModal: React.FC<LivePortfolioModalProps> = ({
 }) => {
   const player = PLAYERS[memberId];
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-  const targetUrl = `${TARGET_PORTFOLIO_URL}?member=${memberId}`;
+  const targetUrl = player.workspaceUrl;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-6 bg-black/90 backdrop-blur-md select-none animate-fadeIn">
+    <div 
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 10000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: isFullscreen ? '0' : '16px',
+        background: 'rgba(0, 0, 0, 0.92)',
+        backdropFilter: 'blur(8px)',
+        userSelect: 'none'
+      }}
+    >
       {/* Vintage Window Frame */}
       <div 
-        className={`relative flex flex-col retro-window shadow-2xl transition-all duration-300 ${
-          isFullscreen ? 'w-full h-full max-w-none max-h-none' : 'w-full max-w-5xl h-[88vh]'
-        }`}
+        className="retro-window"
+        style={{
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          width: isFullscreen ? '100vw' : '100%',
+          maxWidth: isFullscreen ? 'none' : '1100px',
+          height: isFullscreen ? '100vh' : '90vh',
+          borderRadius: isFullscreen ? '0' : '6px',
+          boxShadow: '0 0 50px rgba(0, 0, 0, 0.95), 0 0 30px rgba(0, 240, 255, 0.4)',
+          overflow: 'hidden',
+          transition: 'all 0.2s ease'
+        }}
       >
         {/* Retro Header Bar */}
-        <div className="retro-window-header flex items-center justify-between px-3 py-1.5 select-none">
-          <div className="flex items-center gap-2">
-            <span className="text-xs">🖥️</span>
-            <span className="font-bold text-[11px] truncate">
-              OUTLIERS OS v2.6 - [{player.name.toUpperCase()} WORKSPACE // 3D RETRO ENVIRONMENT]
+        <div className="retro-window-header" style={{ padding: '6px 12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '14px' }}>🖥️</span>
+            <span style={{ fontWeight: 'bold', fontSize: '11px', letterSpacing: '0.5px' }}>
+              OUTLIERS OS v2.6 - [{player.name.toUpperCase()} WORKSPACE // {player.classTitle}]
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {/* Pop out in new tab */}
             <a
               href={targetUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-2 py-0.5 bg-gray-200 text-black text-[10px] font-mono border border-black hover:bg-white flex items-center gap-1"
+              className="arcade-btn"
+              style={{
+                padding: '3px 8px',
+                fontSize: '9px',
+                background: '#e2e8f0',
+                color: '#000000',
+                border: '1px solid #000'
+              }}
               title="Open full page in new tab"
             >
               <span>↗</span>
-              <span className="hidden sm:inline">FULLSCREEN TAB</span>
+              <span>OPEN EXTERNAL TAB</span>
             </a>
 
             {/* Maximize */}
@@ -52,7 +82,16 @@ export const LivePortfolioModal: React.FC<LivePortfolioModalProps> = ({
                 sound.playCursor();
                 setIsFullscreen((prev) => !prev);
               }}
-              className="w-5 h-5 bg-gray-200 text-black text-[10px] font-bold border border-black hover:bg-white flex items-center justify-center"
+              style={{
+                width: '24px',
+                height: '22px',
+                background: '#e2e8f0',
+                color: '#000',
+                border: '1px solid #000',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
               title={isFullscreen ? 'Restore' : 'Maximize'}
             >
               {isFullscreen ? '❐' : '□'}
@@ -64,7 +103,16 @@ export const LivePortfolioModal: React.FC<LivePortfolioModalProps> = ({
                 sound.playCursor();
                 onClose();
               }}
-              className="w-5 h-5 bg-red-600 text-white text-[10px] font-bold border border-black hover:bg-red-500 flex items-center justify-center"
+              style={{
+                width: '24px',
+                height: '22px',
+                background: '#dc2626',
+                color: '#ffffff',
+                border: '1px solid #7f1d1d',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
               title="Close window"
             >
               ✕
@@ -73,32 +121,56 @@ export const LivePortfolioModal: React.FC<LivePortfolioModalProps> = ({
         </div>
 
         {/* Address / Status Bar */}
-        <div className="bg-gray-100 border-b border-gray-400 px-3 py-1 flex items-center justify-between text-[11px] font-mono text-gray-700">
-          <div className="flex items-center gap-2 truncate">
-            <span className="font-bold">LOCATION:</span>
-            <span className="text-blue-800 underline truncate">{targetUrl}</span>
+        <div 
+          style={{
+            background: '#f1f5f9',
+            borderBottom: '1px solid #94a3b8',
+            padding: '5px 12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '11px',
+            fontFamily: 'var(--font-mono)',
+            color: '#334155'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+            <span style={{ fontWeight: 'bold' }}>TARGET URL:</span>
+            <span style={{ color: '#1d4ed8', textDecoration: 'underline' }}>{targetUrl}</span>
           </div>
-          <div className="flex items-center gap-2 text-green-700 font-bold whitespace-nowrap">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
-            <span>CONNECTED (VERCEL EDGE)</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#15803d', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
+            <span>CONNECTED (LIVE DISPATCH)</span>
           </div>
         </div>
 
-        {/* Iframe Viewport Loading Live 3D Retro Desktop */}
-        <div className="relative flex-1 w-full bg-slate-900 overflow-hidden">
+        {/* Iframe Viewport Loading Individual Portfolio Website */}
+        <div style={{ position: 'relative', flex: 1, width: '100%', background: '#020617', overflow: 'hidden' }}>
           <iframe
             src={targetUrl}
-            title={`${player.name} 3D Portfolio`}
-            className="w-full h-full border-none"
+            title={`${player.name} Portfolio`}
+            style={{ width: '100%', height: '100%', border: 'none' }}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             loading="eager"
           />
         </div>
 
         {/* Retro Status Footer */}
-        <div className="bg-gray-200 border-t border-gray-400 px-3 py-1 flex items-center justify-between text-[10px] font-mono text-gray-600">
-          <span>PORTFOLIO SYSTEM: READY • 3D WORKSTATION ACTIVE</span>
-          <span>PRESS ESC TO CLOSE</span>
+        <div 
+          style={{
+            background: '#e2e8f0',
+            borderTop: '1px solid #cbd5e1',
+            padding: '4px 12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '10px',
+            fontFamily: 'var(--font-mono)',
+            color: '#64748b'
+          }}
+        >
+          <span>ENGINEERING DISPATCH NODE: {player.name.toUpperCase()} • 2026 SEASON</span>
+          <span>PRESS ESC TO RETURN</span>
         </div>
       </div>
     </div>

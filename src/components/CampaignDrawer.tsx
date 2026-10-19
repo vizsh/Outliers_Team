@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { QUEST_NODES, TEAM_INFO, HACKATHON_TROPHIES, TARGET_PORTFOLIO_URL } from '../data/teamData';
+import { 
+  QUEST_NODES, 
+  TEAM_INFO, 
+  HACKATHON_TROPHIES, 
+  REAL_PROJECTS, 
+  TOOLS_AND_TECH, 
+  PORTFOLIO_URLS 
+} from '../data/teamData';
 import type { QuestNode } from '../types';
 import { sound } from '../services/soundEngine';
 
@@ -12,6 +19,7 @@ export const CampaignDrawer: React.FC<CampaignDrawerProps> = ({
   onClose,
   onOpenLivePreview
 }) => {
+  const [activeTab, setActiveTab] = useState<'campaign' | 'projects' | 'trophies'>('campaign');
   const [selectedQuest, setSelectedQuest] = useState<QuestNode>(QUEST_NODES[0]);
   const [selectedTrophy, setSelectedTrophy] = useState<typeof HACKATHON_TROPHIES[0] | null>(null);
   const [isHireModalOpen, setIsHireModalOpen] = useState<boolean>(false);
@@ -31,9 +39,11 @@ export const CampaignDrawer: React.FC<CampaignDrawerProps> = ({
   const handleCopyProposal = () => {
     const text = `OUTLIERS SQUAD ENGAGEMENT PROPOSAL
 Team: Shreyas (The Architect), Rishit (The Visualizer), Jeevesh (The Engine)
-Target Project Scope: ${selectedTier === 'ai_fullstack' ? 'Full-Stack AI & Computer Vision Pipeline' : selectedTier === '3d_web' ? '3D WebGL Spatial Experience / Retro Desktop' : 'High-Throughput Distributed Microservices'}
-Contact: team@outliers.dev
-Portfolio Reference: ${TARGET_PORTFOLIO_URL}`;
+Target Scope: ${selectedTier === 'ai_fullstack' ? 'Full-Stack AI & Computer Vision Pipeline' : selectedTier === '3d_web' ? '3D WebGL Spatial Experience / Retro Desktop' : 'High-Throughput Distributed Microservices'}
+Institution: ${TEAM_INFO.institution} (${TEAM_INFO.department})
+Track Record: 5 Hackathons Won (₹1.95L+ Prize Money), 6+ Independent Projects
+Contact: ${TEAM_INFO.email}
+Team Hub: ${TEAM_INFO.teamPortfolioUrl}`;
 
     navigator.clipboard.writeText(text);
     setCopiedProposal(true);
@@ -124,246 +134,461 @@ Portfolio Reference: ${TARGET_PORTFOLIO_URL}`;
           >
             ✕
           </button>
-        </div>
-
-        {/* Content Body: Left Map + Right Quest Details */}
-        <div 
+               {/* Navigation Tabs */}
+        <div
           style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '20px',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '24px'
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '8px',
+            padding: '8px 20px',
+            background: '#090e23',
+            borderBottom: '1px solid rgba(0, 240, 255, 0.3)',
+            fontFamily: 'var(--font-mono)'
           }}
         >
-          {/* Left Column: Overworld Stage Map */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ fontSize: '11px', color: 'var(--neon-gold)', fontFamily: 'var(--font-mono)', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between' }}>
-              <span>★ 16-BIT OVERWORLD STAGE SELECT</span>
-              <span style={{ color: '#94a3b8' }}>[CLICK ANY CHECKPOINT OR TROPHY]</span>
-            </div>
-
-            {/* Overworld Map Canvas Frame */}
-            <div 
+          {[
+            { id: 'campaign', label: '🗺️ 16-BIT OVERWORLD & DOSSIER' },
+            { id: 'trophies', label: '🏆 5 STAGE CHAMPIONSHIPS (PHOTOS)' },
+            { id: 'projects', label: '💡 6 PRODUCTION PLATFORMS & TECH' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                sound.playCursor();
+                setActiveTab(tab.id as typeof activeTab);
+              }}
               style={{
-                position: 'relative',
-                width: '100%',
-                height: '300px',
-                borderRadius: '6px',
-                border: '2px solid rgba(189, 0, 255, 0.7)',
-                overflow: 'hidden',
-                background: '#020617',
-                backgroundImage: `url('/attempt1_ui/03_campaign_quest_mode.jpg')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                boxShadow: 'inset 0 0 30px rgba(0,0,0,0.8)'
+                padding: '6px 14px',
+                borderRadius: '4px',
+                border: '1px solid',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                background: activeTab === tab.id ? 'var(--neon-cyan)' : '#0f172a',
+                borderColor: activeTab === tab.id ? '#00f0ff' : '#334155',
+                color: activeTab === tab.id ? '#000000' : '#94a3b8',
+                transition: 'all 0.15s ease'
               }}
             >
-              <div style={{ position: 'absolute', inset: 0, background: 'rgba(2, 6, 23, 0.4)', pointerEvents: 'none' }} />
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-              {/* Connecting SVG route lines */}
-              <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10 }}>
-                <polyline
-                  points="140,110 280,165 420,215 220,245 460,100"
-                  fill="none"
-                  stroke="#00f0ff"
-                  strokeWidth="2.5"
-                  strokeDasharray="6,6"
-                />
-              </svg>
-
-              {/* Quest Checkpoint Pins */}
-              {QUEST_NODES.map((quest) => {
-                const isSelected = selectedQuest.id === quest.id;
-                return (
-                  <div
-                    key={quest.id}
-                    onClick={() => handleSelectNode(quest)}
-                    style={{
-                      position: 'absolute',
-                      cursor: 'pointer',
-                      transform: 'translate(-50%, -50%)',
-                      left: `${quest.mapCoords.x}%`,
-                      top: `${quest.mapCoords.y}%`,
-                      zIndex: 20
-                    }}
-                  >
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      {isSelected && (
-                        <div style={{ color: 'var(--neon-gold)', fontSize: '11px', fontFamily: 'var(--font-pixel)', animation: 'arrowBounce 0.5s infinite alternate' }}>
-                          ▼
-                        </div>
-                      )}
-                      <div 
-                        style={{
-                          width: '28px',
-                          height: '28px',
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          border: '2px solid',
-                          borderColor: isSelected ? '#ffffff' : 'var(--neon-cyan)',
-                          background: isSelected ? 'var(--neon-gold)' : 'rgba(8, 51, 68, 0.9)',
-                          color: isSelected ? '#000' : 'var(--neon-cyan)',
-                          boxShadow: isSelected ? '0 0 15px #ffd700' : '0 0 10px #00f0ff',
-                          transform: isSelected ? 'scale(1.2)' : 'scale(1)',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        <span style={{ fontSize: '12px' }}>
-                          {quest.status === 'CHAMPION' ? '👑' : '📍'}
-                        </span>
-                      </div>
-                      <div 
-                        style={{
-                          fontSize: '9px',
-                          fontFamily: 'var(--font-mono)',
-                          fontWeight: 'bold',
-                          padding: '2px 6px',
-                          marginTop: '3px',
-                          background: 'rgba(0,0,0,0.92)',
-                          border: '1px solid rgba(0, 240, 255, 0.6)',
-                          borderRadius: '2px',
-                          color: 'var(--neon-cyan)',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        {quest.title}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Clickable Hackathon Trophies */}
-            <div style={{ padding: '12px', borderRadius: '6px', background: '#0e1429', border: '1px solid rgba(255, 215, 0, 0.4)', fontFamily: 'var(--font-mono)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255, 215, 0, 0.3)', paddingBottom: '6px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--neon-gold)' }}>
-                  🏆 NATIONAL HACKATHON TROPHIES [CLICK FOR AUDIT]
-                </span>
-                <span style={{ fontSize: '10px', color: '#94a3b8' }}>3 VERIFIED VICTORIES</span>
+        {/* TAB 1: Overworld & Quest Dossier */}
+        {activeTab === 'campaign' && (
+          <div 
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '20px',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gap: '24px'
+            }}
+          >
+            {/* Left Column: Overworld Stage Map */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--neon-gold)', fontFamily: 'var(--font-mono)', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between' }}>
+                <span>★ 16-BIT OVERWORLD STAGE SELECT</span>
+                <span style={{ color: '#94a3b8' }}>[CLICK ANY CHECKPOINT OR TROPHY]</span>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                {HACKATHON_TROPHIES.map((trophy, i) => (
-                  <button
-                    key={trophy.id}
-                    onClick={() => handleOpenTrophy(trophy)}
-                    style={{
-                      padding: '8px',
-                      borderRadius: '4px',
-                      background: 'rgba(0,0,0,0.6)',
-                      border: '1px solid rgba(255, 215, 0, 0.3)',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      color: '#ffffff'
-                    }}
+              {/* Overworld Map Canvas Frame */}
+              <div 
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: '280px',
+                  borderRadius: '6px',
+                  border: '2px solid rgba(189, 0, 255, 0.7)',
+                  overflow: 'hidden',
+                  background: '#020617',
+                  backgroundImage: `url('/attempt1_ui/03_campaign_quest_mode.jpg')`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  boxShadow: 'inset 0 0 30px rgba(0,0,0,0.8)'
+                }}
+              >
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(2, 6, 23, 0.4)', pointerEvents: 'none' }} />
+
+                {/* Connecting SVG route lines */}
+                <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10 }}>
+                  <polyline
+                    points="70,90 150,140 230,100 270,180 100,200"
+                    fill="none"
+                    stroke="#00f0ff"
+                    strokeWidth="2.5"
+                    strokeDasharray="6,6"
+                  />
+                </svg>
+
+                {/* Quest Checkpoint Pins */}
+                {QUEST_NODES.map((quest) => {
+                  const isSelected = selectedQuest.id === quest.id;
+                  return (
+                    <div
+                      key={quest.id}
+                      onClick={() => handleSelectNode(quest)}
+                      style={{
+                        position: 'absolute',
+                        cursor: 'pointer',
+                        transform: 'translate(-50%, -50%)',
+                        left: `${quest.mapCoords.x}%`,
+                        top: `${quest.mapCoords.y}%`,
+                        zIndex: 20
+                      }}
+                    >
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {isSelected && (
+                          <div style={{ color: 'var(--neon-gold)', fontSize: '11px', fontFamily: 'var(--font-pixel)', animation: 'arrowBounce 0.5s infinite alternate' }}>
+                            ▼
+                          </div>
+                        )}
+                        <div 
+                          style={{
+                            width: '26px',
+                            height: '26px',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '2px solid',
+                            borderColor: isSelected ? '#ffffff' : 'var(--neon-cyan)',
+                            background: isSelected ? 'var(--neon-gold)' : 'rgba(8, 51, 68, 0.9)',
+                            color: isSelected ? '#000' : 'var(--neon-cyan)',
+                            boxShadow: isSelected ? '0 0 15px #ffd700' : '0 0 10px #00f0ff',
+                            transform: isSelected ? 'scale(1.2)' : 'scale(1)',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <span style={{ fontSize: '11px' }}>
+                            {quest.status === 'CHAMPION' ? '👑' : '📍'}
+                          </span>
+                        </div>
+                        <div 
+                          style={{
+                            fontSize: '9px',
+                            fontFamily: 'var(--font-mono)',
+                            fontWeight: 'bold',
+                            padding: '2px 5px',
+                            marginTop: '2px',
+                            background: 'rgba(0,0,0,0.92)',
+                            border: '1px solid rgba(0, 240, 255, 0.6)',
+                            borderRadius: '2px',
+                            color: 'var(--neon-cyan)',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {quest.title}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Clickable 5 Hackathon Trophies */}
+              <div style={{ padding: '12px', borderRadius: '6px', background: '#0e1429', border: '1px solid rgba(255, 215, 0, 0.4)', fontFamily: 'var(--font-mono)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255, 215, 0, 0.3)', paddingBottom: '6px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--neon-gold)' }}>
+                    🏆 5 NATIONAL HACKATHON TROPHIES [CLICK FOR STAGE AUDIT]
+                  </span>
+                  <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 'bold' }}>₹1.95L+ WON</span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
+                  {HACKATHON_TROPHIES.map((trophy, i) => (
+                    <button
+                      key={trophy.id}
+                      onClick={() => handleOpenTrophy(trophy)}
+                      style={{
+                        padding: '8px',
+                        borderRadius: '4px',
+                        background: 'rgba(0,0,0,0.6)',
+                        border: '1px solid rgba(255, 215, 0, 0.3)',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        color: '#ffffff'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '16px' }}>{i === 0 ? '🥇' : i === 1 ? '🏆' : i === 2 ? '👑' : i === 3 ? '🎖️' : '🥉'}</span>
+                        <span style={{ fontSize: '9px', color: '#22c55e', fontWeight: 'bold' }}>{trophy.prize.split(' ')[0]}</span>
+                      </div>
+                      <div style={{ fontSize: '10px', fontWeight: 'bold', color: 'var(--neon-gold)', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {trophy.title.split('(')[0]}
+                      </div>
+                      <div style={{ fontSize: '9px', color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {trophy.location}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Quest Dossier & Action */}
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '14px', padding: '16px', borderRadius: '6px', background: '#0e1429', border: '1.5px solid rgba(0, 240, 255, 0.5)' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(0, 240, 255, 0.25)', paddingBottom: '8px', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', padding: '2px 6px', borderRadius: '2px', background: 'rgba(88, 28, 135, 0.6)', border: '1px solid #c084fc', color: '#e9d5ff' }}>
+                    {selectedQuest.category}
+                  </span>
+                  <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', padding: '2px 6px', borderRadius: '2px', background: 'rgba(113, 63, 18, 0.8)', border: '1px solid #facc15', color: '#fef08a', fontWeight: 'bold' }}>
+                    ★ {selectedQuest.award}
+                  </span>
+                </div>
+
+                <h3 style={{ fontFamily: 'var(--font-pixel)', fontSize: '16px', color: 'var(--neon-cyan)', marginBottom: '4px' }}>
+                  {selectedQuest.title}
+                </h3>
+                <div style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>
+                  {selectedQuest.subtitle}
+                </div>
+
+                <p style={{ fontSize: '11px', color: '#cbd5e1', fontFamily: 'var(--font-mono)', lineHeight: '1.5', background: 'rgba(0,0,0,0.4)', padding: '10px', borderRadius: '4px', border: '1px solid #1e293b' }}>
+                  {selectedQuest.summary}
+                </p>
+
+                {/* Verified Metrics */}
+                <div style={{ marginTop: '12px' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--neon-magenta)', fontFamily: 'var(--font-mono)', fontWeight: 'bold', marginBottom: '4px' }}>
+                    VERIFIED AUDIT BENCHMARKS:
+                  </div>
+                  <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--neon-cyan)' }}>
+                    {selectedQuest.metrics.map((m, i) => (
+                      <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ color: '#10b981' }}>✔</span>
+                        <span>{m}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Tech Stack Pills */}
+                <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {selectedQuest.tech.map((t) => (
+                    <span key={t} style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', padding: '2px 6px', borderRadius: '2px', background: '#1e293b', border: '1px solid #334155', color: '#94a3b8' }}>
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* CTAs */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '10px', borderTop: '1px solid rgba(0, 240, 255, 0.25)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <a
+                    href={selectedQuest.repoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="arcade-btn"
+                    style={{ textAlign: 'center', fontSize: '9px', padding: '8px' }}
                   >
-                    <div style={{ fontSize: '18px' }}>{i === 0 ? '🥇' : i === 1 ? '🏆' : '🎖️'}</div>
-                    <div style={{ fontSize: '10px', fontWeight: 'bold', color: 'var(--neon-gold)', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {trophy.project.split('—')[0]}
-                    </div>
-                    <div style={{ fontSize: '9px', color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {trophy.title.split('(')[0]}
-                    </div>
-                  </button>
-                ))}
+                    <span>📦</span>
+                    <span>CODE REPO ↗</span>
+                  </a>
+
+                  <a
+                    href={selectedQuest.liveUrl || PORTFOLIO_URLS.jeevesh}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="arcade-btn arcade-btn-gold"
+                    style={{ textAlign: 'center', fontSize: '9px', padding: '8px' }}
+                  >
+                    <span>🚀</span>
+                    <span>LIVE DEMO ↗</span>
+                  </a>
+                </div>
+
+                <button
+                  onClick={() => {
+                    sound.playSelect();
+                    setIsHireModalOpen(true);
+                  }}
+                  className="arcade-btn arcade-btn-magenta"
+                  style={{ textAlign: 'center', fontSize: '10px', padding: '10px' }}
+                >
+                  <span>🤝</span>
+                  <span>HIRE ALL 3 AS A SQUAD [PROPOSAL]</span>
+                </button>
               </div>
             </div>
           </div>
+        )}
 
-          {/* Right Column: Quest Dossier & Action */}
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '14px', padding: '16px', borderRadius: '6px', background: '#0e1429', border: '1.5px solid rgba(0, 240, 255, 0.5)' }}>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(0, 240, 255, 0.25)', paddingBottom: '8px', marginBottom: '10px' }}>
-                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', padding: '2px 6px', borderRadius: '2px', background: 'rgba(88, 28, 135, 0.6)', border: '1px solid #c084fc', color: '#e9d5ff' }}>
-                  {selectedQuest.category}
-                </span>
-                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', padding: '2px 6px', borderRadius: '2px', background: 'rgba(113, 63, 18, 0.8)', border: '1px solid #facc15', color: '#fef08a', fontWeight: 'bold' }}>
-                  ★ {selectedQuest.award}
-                </span>
-              </div>
-
-              <h3 style={{ fontFamily: 'var(--font-pixel)', fontSize: '16px', color: 'var(--neon-cyan)', marginBottom: '4px' }}>
-                {selectedQuest.title}
-              </h3>
-              <div style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>
-                {selectedQuest.subtitle}
-              </div>
-
-              <p style={{ fontSize: '11px', color: '#cbd5e1', fontFamily: 'var(--font-mono)', lineHeight: '1.5', background: 'rgba(0,0,0,0.4)', padding: '10px', borderRadius: '4px', border: '1px solid #1e293b' }}>
-                {selectedQuest.summary}
-              </p>
-
-              {/* Verified Metrics */}
-              <div style={{ marginTop: '12px' }}>
-                <div style={{ fontSize: '10px', color: 'var(--neon-magenta)', fontFamily: 'var(--font-mono)', fontWeight: 'bold', marginBottom: '4px' }}>
-                  VERIFIED AUDIT BENCHMARKS:
+        {/* TAB 2: Full Gallery of 5 Trophies with Stage Photos */}
+        {activeTab === 'trophies' && (
+          <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '10px' }}>
+              <div>
+                <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--neon-gold)', fontFamily: 'var(--font-mono)' }}>
+                  ★ 5 NATIONAL HACKATHON VICTORIES // ONE SEASON RECORD
+                </h3>
+                <div style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'var(--font-mono)' }}>
+                  Total Prize Money Won: ₹1.95L+ across Pune, Gandhinagar, and Mumbai
                 </div>
-                <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--neon-cyan)' }}>
-                  {selectedQuest.metrics.map((m, i) => (
-                    <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ color: '#10b981' }}>✔</span>
-                      <span>{m}</span>
-                    </li>
-                  ))}
-                </ul>
               </div>
+              <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#22c55e', fontFamily: 'var(--font-mono)' }}>
+                100% PODIUM CONVERSION
+              </span>
+            </div>
 
-              {/* Tech Stack Pills */}
-              <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {selectedQuest.tech.map((t) => (
-                  <span key={t} style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', padding: '2px 6px', borderRadius: '2px', background: '#1e293b', border: '1px solid #334155', color: '#94a3b8' }}>
-                    {t}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+              {HACKATHON_TROPHIES.map((trophy) => (
+                <div
+                  key={trophy.id}
+                  onClick={() => handleOpenTrophy(trophy)}
+                  style={{
+                    borderRadius: '6px',
+                    background: '#0d1329',
+                    border: '1.5px solid rgba(255, 215, 0, 0.4)',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s ease, border-color 0.2s ease'
+                  }}
+                >
+                  {/* Stage Photo Banner */}
+                  <div style={{ position: 'relative', height: '170px', background: '#000', overflow: 'hidden' }}>
+                    <img 
+                      src={trophy.image} 
+                      alt={trophy.title} 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                    <div style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(0,0,0,0.85)', padding: '3px 8px', borderRadius: '3px', fontSize: '10px', color: '#ffd700', fontWeight: 'bold', border: '1px solid #ffd700' }}>
+                      {trophy.prize}
+                    </div>
+                    <div style={{ position: 'absolute', bottom: '8px', left: '8px', background: 'rgba(0,0,0,0.85)', padding: '2px 6px', borderRadius: '3px', fontSize: '9px', color: '#38bdf8' }}>
+                      📍 {trophy.location}
+                    </div>
+                  </div>
+
+                  {/* Body Content */}
+                  <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, justifyContent: 'space-between', fontFamily: 'var(--font-mono)' }}>
+                    <div>
+                      <div style={{ fontSize: '11px', color: 'var(--neon-gold)', fontWeight: 'bold' }}>
+                        {trophy.rank}
+                      </div>
+                      <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff', marginTop: '2px' }}>
+                        {trophy.title}
+                      </h4>
+                      <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>
+                        {trophy.organizer} • {trophy.date}
+                      </div>
+                      <p style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: '1.4', marginTop: '8px' }}>
+                        {trophy.description}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenTrophy(trophy);
+                      }}
+                      className="arcade-btn arcade-btn-gold"
+                      style={{ marginTop: '10px', fontSize: '9px', padding: '6px 10px', width: '100%' }}
+                    >
+                      VIEW AUDIT DETAILS & PROOF ↗
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: 6 Production Platforms & Full Tech Stack */}
+        {activeTab === 'projects' && (
+          <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--neon-cyan)', fontFamily: 'var(--font-mono)' }}>
+                💡 6 INDEPENDENT PRODUCTION PLATFORMS
+              </h3>
+              <div style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
+                Beyond hackathon sprints, each member builds and ships independent platforms feeding into team capability.
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '14px' }}>
+              {REAL_PROJECTS.map((proj) => (
+                <div 
+                  key={proj.id}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '6px',
+                    background: '#0d1329',
+                    border: '1px solid rgba(0, 240, 255, 0.4)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    fontFamily: 'var(--font-mono)'
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '2px', background: 'rgba(0, 240, 255, 0.15)', border: '1px solid #00f0ff', color: '#38bdf8' }}>
+                        {proj.category}
+                      </span>
+                      <span style={{ fontSize: '9px', color: '#94a3b8' }}>
+                        {proj.tag}
+                      </span>
+                    </div>
+
+                    <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: '#ffffff', marginBottom: '6px' }}>
+                      {proj.title}
+                    </h4>
+
+                    <p style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: '1.4', marginBottom: '10px' }}>
+                      {proj.description}
+                    </p>
+                  </div>
+
+                  <div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', borderTop: '1px solid #1e293b', paddingTop: '8px' }}>
+                      {proj.tech.map((t) => (
+                        <span key={t} style={{ fontSize: '9px', padding: '2px 5px', borderRadius: '2px', background: '#1e293b', color: '#94a3b8' }}>
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Tools & Tech We Reach For (From PDF Page 4) */}
+            <div style={{ padding: '16px', borderRadius: '6px', background: '#0a0f24', border: '1px solid rgba(189, 0, 255, 0.4)', fontFamily: 'var(--font-mono)' }}>
+              <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--neon-magenta)', marginBottom: '8px' }}>
+                🛠️ CORE TOOLS & TECHNOLOGIES WE REACH FOR (PDF VERIFIED):
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {TOOLS_AND_TECH.map((tool) => (
+                  <span 
+                    key={tool}
+                    style={{
+                      fontSize: '10px',
+                      padding: '4px 10px',
+                      borderRadius: '3px',
+                      background: 'rgba(189, 0, 255, 0.12)',
+                      border: '1px solid rgba(189, 0, 255, 0.5)',
+                      color: '#e2e8f0',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    {tool}
                   </span>
                 ))}
               </div>
             </div>
-
-            {/* CTAs */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '10px', borderTop: '1px solid rgba(0, 240, 255, 0.25)' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <a
-                  href={selectedQuest.repoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="arcade-btn"
-                  style={{ textAlign: 'center', fontSize: '9px', padding: '8px' }}
-                >
-                  <span>📦</span>
-                  <span>CODE REPO ↗</span>
-                </a>
-
-                <button
-                  onClick={onOpenLivePreview}
-                  className="arcade-btn arcade-btn-gold"
-                  style={{ textAlign: 'center', fontSize: '9px', padding: '8px' }}
-                >
-                  <span>🚀</span>
-                  <span>LIVE DEMO ↗</span>
-                </button>
-              </div>
-
-              <button
-                onClick={() => {
-                  sound.playSelect();
-                  setIsHireModalOpen(true);
-                }}
-                className="arcade-btn arcade-btn-magenta"
-                style={{ textAlign: 'center', fontSize: '10px', padding: '10px' }}
-              >
-                <span>🤝</span>
-                <span>HIRE ALL 3 AS A SQUAD [PROPOSAL]</span>
-              </button>
-            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Trophy Modal Popup */}
+      {/* Trophy Audit Modal Popup with Real Photograph */}
       {selectedTrophy && (
         <div 
           onClick={() => setSelectedTrophy(null)}
@@ -375,8 +600,8 @@ Portfolio Reference: ${TARGET_PORTFOLIO_URL}`;
             alignItems: 'center',
             justifyContent: 'center',
             padding: '16px',
-            background: 'rgba(0,0,0,0.85)',
-            backdropFilter: 'blur(4px)',
+            background: 'rgba(0,0,0,0.88)',
+            backdropFilter: 'blur(6px)',
             cursor: 'pointer'
           }}
         >
@@ -384,27 +609,76 @@ Portfolio Reference: ${TARGET_PORTFOLIO_URL}`;
             onClick={(e) => e.stopPropagation()}
             style={{
               padding: '20px',
-              maxWidth: '480px',
+              maxWidth: '520px',
               width: '100%',
               background: '#0f172a',
               border: '2px solid var(--neon-gold)',
               borderRadius: '8px',
-              boxShadow: '0 0 35px rgba(255,215,0,0.5)',
+              boxShadow: '0 0 45px rgba(255,215,0,0.6)',
               fontFamily: 'var(--font-mono)',
               fontSize: '12px',
-              color: '#e2e8f0'
+              color: '#e2e8f0',
+              maxHeight: '90vh',
+              overflowY: 'auto'
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,215,0,0.4)', paddingBottom: '8px', marginBottom: '12px' }}>
               <span style={{ fontWeight: 'bold', color: 'var(--neon-gold)', fontSize: '13px' }}>★ {selectedTrophy.rank}</span>
-              <button onClick={() => setSelectedTrophy(null)} style={{ background: 'none', border: 'none', color: '#ff007f', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>✕</button>
+              <button onClick={() => setSelectedTrophy(null)} style={{ background: 'none', border: 'none', color: '#ff007f', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>✕</button>
             </div>
 
-            <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>
+            {/* Real Winning Stage Cheque / Trophy Photo */}
+            <div 
+              style={{
+                position: 'relative',
+                width: '100%',
+                maxHeight: '230px',
+                borderRadius: '6px',
+                border: '2px solid rgba(255, 215, 0, 0.6)',
+                overflow: 'hidden',
+                marginBottom: '12px',
+                background: '#000',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <img 
+                src={selectedTrophy.image} 
+                alt={selectedTrophy.title}
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  maxHeight: '230px',
+                  objectFit: 'contain'
+                }}
+              />
+              <div 
+                style={{
+                  position: 'absolute',
+                  bottom: '6px',
+                  right: '8px',
+                  background: 'rgba(0,0,0,0.85)',
+                  padding: '3px 8px',
+                  borderRadius: '3px',
+                  fontSize: '10px',
+                  color: 'var(--neon-gold)',
+                  fontFamily: 'var(--font-mono)',
+                  border: '1px solid #ffd700'
+                }}
+              >
+                PROVED: {selectedTrophy.prize}
+              </div>
+            </div>
+
+            <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>
               {selectedTrophy.project}
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--neon-cyan)', marginBottom: '12px' }}>
-              {selectedTrophy.title} ({selectedTrophy.date})
+            <div style={{ fontSize: '11px', color: 'var(--neon-cyan)', marginBottom: '8px' }}>
+              {selectedTrophy.title} • {selectedTrophy.date}
+            </div>
+            <div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '12px' }}>
+              Organizer: {selectedTrophy.organizer}
             </div>
 
             <p style={{ color: '#cbd5e1', lineHeight: '1.5', background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '4px', border: '1px solid #1e293b', marginBottom: '12px' }}>
@@ -521,6 +795,7 @@ Portfolio Reference: ${TARGET_PORTFOLIO_URL}`;
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
