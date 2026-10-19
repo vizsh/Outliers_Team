@@ -72,7 +72,8 @@ Team Hub: ${TEAM_INFO.teamPortfolioUrl}`;
           position: 'relative',
           width: '100%',
           maxWidth: '1060px',
-          maxHeight: '90vh',
+          height: '90vh',
+          maxHeight: '880px',
           display: 'flex',
           flexDirection: 'column',
           background: '#070a16',
@@ -90,7 +91,8 @@ Team Hub: ${TEAM_INFO.teamPortfolioUrl}`;
             borderBottom: '2px solid rgba(0, 240, 255, 0.6)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between'
+            justifyContent: 'space-between',
+            flexShrink: 0
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -134,16 +136,19 @@ Team Hub: ${TEAM_INFO.teamPortfolioUrl}`;
           >
             ✕
           </button>
-               {/* Navigation Tabs */}
+        </div>
+
+        {/* Navigation Tabs */}
         <div
           style={{
             display: 'flex',
             flexWrap: 'wrap',
-            gap: '8px',
-            padding: '8px 20px',
+            gap: '10px',
+            padding: '10px 20px',
             background: '#090e23',
-            borderBottom: '1px solid rgba(0, 240, 255, 0.3)',
-            fontFamily: 'var(--font-mono)'
+            borderBottom: '1.5px solid rgba(0, 240, 255, 0.3)',
+            fontFamily: 'var(--font-mono)',
+            flexShrink: 0
           }}
         >
           {[
@@ -158,16 +163,17 @@ Team Hub: ${TEAM_INFO.teamPortfolioUrl}`;
                 setActiveTab(tab.id as typeof activeTab);
               }}
               style={{
-                padding: '6px 14px',
+                padding: '8px 16px',
                 borderRadius: '4px',
-                border: '1px solid',
+                border: '1.5px solid',
                 fontFamily: 'var(--font-mono)',
                 fontSize: '11px',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 background: activeTab === tab.id ? 'var(--neon-cyan)' : '#0f172a',
                 borderColor: activeTab === tab.id ? '#00f0ff' : '#334155',
-                color: activeTab === tab.id ? '#000000' : '#94a3b8',
+                color: activeTab === tab.id ? '#000000' : '#cbd5e1',
+                boxShadow: activeTab === tab.id ? '0 0 15px rgba(0, 240, 255, 0.4)' : 'none',
                 transition: 'all 0.15s ease'
               }}
             >
@@ -182,6 +188,7 @@ Team Hub: ${TEAM_INFO.teamPortfolioUrl}`;
             style={{
               flex: 1,
               overflowY: 'auto',
+              minHeight: 0,
               padding: '20px',
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
@@ -421,7 +428,7 @@ Team Hub: ${TEAM_INFO.teamPortfolioUrl}`;
 
         {/* TAB 2: Full Gallery of 5 Trophies with Stage Photos */}
         {activeTab === 'trophies' && (
-          <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '10px' }}>
               <div>
                 <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--neon-gold)', fontFamily: 'var(--font-mono)' }}>
@@ -503,7 +510,7 @@ Team Hub: ${TEAM_INFO.teamPortfolioUrl}`;
 
         {/* TAB 3: 6 Production Platforms & Full Tech Stack */}
         {activeTab === 'projects' && (
-          <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div>
               <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--neon-cyan)', fontFamily: 'var(--font-mono)' }}>
                 💡 6 INDEPENDENT PRODUCTION PLATFORMS
@@ -795,7 +802,6 @@ Team Hub: ${TEAM_INFO.teamPortfolioUrl}`;
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 };
